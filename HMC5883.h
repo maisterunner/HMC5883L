@@ -77,7 +77,7 @@
 // REG 1:	 		Configuration Register B
 //			 		CRB (def 0x20)
 
-// Gain cofiguration bits
+// Gain configuration bits
 #define HMC_CRB_GAIN0									0x00 << 5
 #define HMC_CRB_GAIN1									0x01 << 5
 #define HMC_CRB_GAIN2									0x02 << 5
@@ -107,16 +107,63 @@
 
 /* ----------------
 *
+*
+*
+ ----------------- */
+
+typedef struct{
+		// Conditioning
+	uint8_t id[3];
+		// conditioned measurements
+	int16_t mag_X;
+	int16_t mag_Y;
+	int16_t mag_Z;
+		// float calc data
+	float mag_Xf;
+	float mag_Yf;
+	float mag_Zf;
+		// Interface
+	I2C_HandleTypeDef *hi2c;
+	GPIO_TypeDef *int_PinPort;
+	uint16_t int_Pin;
+		// raw data
+	uint8_t raw[6];
+		// I2C reading
+	uint8_t reading_data;
+	uint8_t data_ready;
+	uint8_t meas_triggered;
+		// data regs
+	uint8_t reg_address[6];
+} HMC_data;
+
+
+/* ----------------
+*
 *	Function prototypes
 *
  ----------------- */
 
-uint8_t HMC_Read_ID(I2C_HandleTypeDef *hi2c);
-uint8_t HMC_Write_Config(I2C_HandleTypeDef *hi2c);
-uint8_t HMC_Read_Out(I2C_HandleTypeDef *hi2c, uint16_t* result);
+uint8_t HMC_Init_Struct(HMC_data *input,
+		I2C_HandleTypeDef *hi2c,
+		GPIO_TypeDef *HMC_INT_Port, uint16_t HMC_IntPin);
 
+uint8_t HMC_Read_ID(HMC_data *input);
 
+uint8_t HMC_Config(HMC_data *input,
+						uint8_t average, uint8_t data_or, uint8_t meas_mode,
+						uint8_t gain, uint8_t mode);
 
+void HMC_Read_Rdy(HMC_data *input);
+
+uint8_t HMC_Trigger_Single_Meas(HMC_data *input);
+
+uint8_t HMC_Read_Poll(HMC_data *input);
+
+uint8_t HMC_SendAddr_DMA(HMC_data *input);
+
+uint8_t HMC_ReadMeas_DMA(HMC_data *input);
+
+void HMC_ReadCplt_DMA(HMC_data *input);
 
 
 #endif
